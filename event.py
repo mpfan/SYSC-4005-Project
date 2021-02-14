@@ -32,5 +32,5 @@ def create_inspection_finished(time, entity, creator):
 def create_processing_finished(time, entity, creator):
     return Event(EventType.Processing_Finished, time, entity, creator)
 
-def create_end_of_simulation(time)
+def create_end_of_simulation(time):
     return Event(EventType.EOS, time, None, None)

@@ -37,20 +37,20 @@ class Snapshot:
     def get_fel(self):
         return self.fel
 
-    def set_clock(clock):
+    def set_clock(self, clock):
         self.clock = clock
     
-    def set_workstations(workstations):
+    def set_workstations(self, workstations):
         self.workstations = workstations
     
-    def set_products(products):
+    def set_products(self, products):
         self.products = products
     
-    def set_components(components):
+    def set_components(self, components):
         self.components = components
     
-    def set_inspectors(inspectors):
+    def set_inspectors(self, inspectors):
         self.inspectors = inspectors
     
-    def set_fel(fel):
+    def set_fel(self, fel):
         self.fel = fel

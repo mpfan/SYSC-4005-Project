@@ -4,7 +4,7 @@ workstations. The Policy follows the strategy pattrn
 '''
 
 class Policy:
-    def __init__(self):
+    def __init__(self, workstations):
         self.workstations = workstations
 
     # Implemented by an actual policy
@@ -26,13 +26,13 @@ class RoundRobin(Policy):
     # This probably will not happen since we check the buffers before calling this function
     def get_workstation(self, component_type: int):
         # Retrive the workstation that's next in line
-        workstation = workstation[self.index]
+        workstation = self.workstations[self.index]
 
         # if not full, return the current workstation
-        if len(workstation.get_buffers[component_type]) < 2:
+        if len(workstation.get_buffers()[component_type]) < 2:
 
             # update the index for the next work station
-            self.index = self.index + 1 % len(workstations)
+            self.index = (self.index + 1) % len(self.workstations)
             return workstation
 
         # If the workstation that's next in line is full then we select 
