@@ -24,6 +24,7 @@ class Inspector(Entity):
         self.busy = False
         self.busy_time = 0
         self.idle_time = 0
+        self.blocked = False
     
     def is_busy(self):
         return self.is_busy
@@ -43,6 +44,12 @@ class Inspector(Entity):
     def set_idle_time(self, idle_time):
         self.idle_time = idle_time
     
+    def is_blocked(self):
+        return self.blocked
+    
+    def set_blocked(self, blocked):
+        self.blocked = blocked
+
     def inspect_component(self):
         # Return C1 if id = 1
         # Return C2 or C3 randomly if id = 2
