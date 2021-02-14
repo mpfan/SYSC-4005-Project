@@ -47,7 +47,7 @@ class Inspector(Entity):
 
     def inspect_component(self):
         # Return C1 if id = 1
-        if id == 1:
+        if self.id == 1:
             return Component(1)
         # Return C2 or C3 randomly if id = 2
         else:
@@ -62,7 +62,7 @@ class Workstation(Entity):
         self.buffers = buffers
     
     def is_busy(self):
-        return self.is_busy
+        return self.busy
     
     def set_busy(self, busy):
         self.busy = busy
@@ -79,8 +79,8 @@ class Workstation(Entity):
     def set_idle_time(self, idle_time):
         self.idle_time = idle_time
     
-    def get_buffer(self):
-        return buffers
+    def get_buffers(self):
+        return self.buffers
     
     def add_to_buffer(self, componentType, component):
         self.buffers[componentType].append(component)
@@ -92,7 +92,8 @@ class Workstation(Entity):
     # Returns the product 
     def assemble_products(self):
         # Consume C1 and produces P1 if id = 1
-        if id == 1:
+
+        if self.id == 1:
             if len(self.buffers[1]) > 0:
                 self.remove_from_buffer(1)
                 return Product(1)
@@ -100,17 +101,20 @@ class Workstation(Entity):
                 return None
         # Consume C1 and C2 and produces P2 if id = 2
         elif self.id == 2:
-            if len(self.buffers[1]) > 0 and len(self.buffers[2]) > 0
-                self.buffers.remove_from_buffer(1)
-                self.buffers.remove_from_buffer(2)
+            if len(self.buffers[1]) > 0 and len(self.buffers[2]) > 0:
+                self.remove_from_buffer(1)
+                self.remove_from_buffer(2)
                 return Product(2)
+            else:
+                return None
         # Consume C1 and C3 and produces P3 if id = 3
-        elif self.id == 2:
-            if len(self.buffers[1]) > 0 and len(self.buffers[3]) > 0
-                self.buffers.remove_from_buffer(1)
-                self.buffers.remove_from_buffer(3)
+        elif self.id == 3:
+            if len(self.buffers[1]) > 0 and len(self.buffers[3]) > 0:
+                self.remove_from_buffer(1)
+                self.remove_from_buffer(3)
                 return Product(3)
-        
+            else:
+                return None
         else:
-            raise Expection("Unknown workstation")
+            raise Exepction("Unknown workstation")
             
