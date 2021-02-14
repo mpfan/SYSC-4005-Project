@@ -4,7 +4,7 @@ from enum import Enum
 This module contains the class definition for events. 
 '''
 
-EventType = Enum('EventType', 'Inspection_Finished Processing_Finished')
+EventType = Enum('EventType', 'Inspection_Finished Processing_Finished EOS')
 
 class Event:
     def __init__(self, event_type, time, entity, creator):
@@ -31,3 +31,6 @@ def create_inspection_finished(time, entity, creator):
 
 def create_processing_finished(time, entity, creator):
     return Event(EventType.Processing_Finished, time, entity, creator)
+
+def create_end_of_simulation(time)
+    return Event(EventType.EOS, time, None, None)

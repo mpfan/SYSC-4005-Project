@@ -5,18 +5,20 @@ workstations. The Policy follows the strategy pattrn
 
 class Policy:
     def __init__(self):
-        pass
+        self.workstations = workstations
 
     # Implemented by an actual policy
     def get_workstation(self, component_type: int):
         # This is where the workstation is picked according to the choose policy
         raise NotImplementedError
+    
+    def set_workstations(self, workstations):
+        self.workstations = workstations
 
 class RoundRobin(Policy):
     def __init__(self, workstations, starting_workstation):
-        super().__init__()
+        super().__init__(workstations)
 
-        self.workstations = workstations
         self.index = starting_workstation
     
     # Override
@@ -38,12 +40,10 @@ class RoundRobin(Policy):
             
 class ShortestQueue(Policy):
     def __init__(self, workstations):
-        super().__init__()
-
-        self.workstations = workstations
+        super().__init__(workstations)
     
     # Override
-    def get_workstation(self, , component_type: int):
+    def get_workstation(self, component_type: int):
         # Initialize to the first workstation
         workstation = workstations[0] 
         for work in self.workstations:
@@ -53,7 +53,5 @@ class ShortestQueue(Policy):
             # If equal W1 > W2 > W3
             elif len(work.get_buffers[component_type]) == len(workstation.get_buffers[component_type]):
                 workstation = workstation if workstation.get_id() < work.get_id() else work
-
-        
 
         return workstation
