@@ -28,3 +28,21 @@ class Snapshot:
     
     def get_fel(self):
         return self.fel
+
+    def set_clock(clock):
+        self.clock = clock
+    
+    def set_workstations(workstations):
+        self.workstations = workstations
+    
+    def set_products(products):
+        self.products = products
+    
+    def set_components(components):
+        self.components = components
+    
+    def set_inspectors(inspectors):
+        self.inspectors = inspectors
+    
+    def set_fel(fel):
+        self.fel = fel
