@@ -1,8 +1,8 @@
 # Local modules
 from entity import *
 from snapshot import Snapshot
-from policy import RoundRobin
-from event import create_inspection_finished, create_processing_finished, EventType
+from policy import RoundRobin, ShortestQueue
+from event import create_inspection_finished, create_processing_finished, create_end_of_simulation, EventType
 from generator import get_service_time, get_processing_time
 
 # System modules
@@ -13,7 +13,7 @@ This file contains the class definition for the model
 '''
 
 class Model:
-    def __init__(self, policy):
+    def __init__(self, policyName):
         # Initializes the initial system snapshot
         clock = 0
         w1 = Workstation(1, {1: []})
@@ -23,25 +23,45 @@ class Model:
         products = []
         components = []
         inspectors = [Inspector(n) for n in range (1,3)] # 2 inspectors with id 1,2
-        fel = []
+
+        # Initial events
+        eos = create_end_of_simulation(60)
+        inspectionFinished1 = create_inspection_finished(2, Component(1), inspectors[1])
+        inspectionFinished2 = create_inspection_finished(3, Component(2), inspectors[2])
+
+        fel = [inspectionFinished1, inspectionFinished2, eos]
         
 
-        self.policy = policy
+        if policyName == "RoundRobin":
+            self.policy = RoundRobin(workstations, 0)
+        elif policyName == "ShortestQueue":
+            self.policy = ShortestQueue(workstations)
+        
         self.snapshots = [Snapshot(clock, workstations, products, components, inspectors, fel)]
     
     # This is where the simulations happens
     def simulate(self):
-        raise NotImplementedError
+        while True:
+            event = self.snapshots[-1].get_fel().pop(0)
+
+            if event.get_type() == EventType.EOS:
+                print("Simulation has completed")
+                break
+            
+            self.process_event(event)
+        
     
     # So this function will probably return a pandas object or some object that we can use to do analysis and visualization
     def generate_report(self):
-        raise NotImplementedError
+        latest_snap = self.snapshots[-1]
+        print("Created components:", len(latest_snap.get_components())
+        print("Created products", len(latest.snapshot.get_products())
 
     # Process the event
     def process_event(self, event):
         # We are always working with a new copy of the snapshot
         # At first, this new copy is the same as the previous snapshot
-        current_snapshot = copy.deepcopy(self.snapshots[len(self.snapshots) - 1])
+        current_snapshot = copy.deepcopy(self.snapshots[-1])
 
         # Calculate cumulative stats
          # We are tracking the busy and idle time for inspectors
@@ -88,7 +108,7 @@ class Model:
                 # Check if the workstation is able to start processing the components
                 # Try to assemble new product
                 if not current_workstation.is_busy():
-                    new_product = workstation.assemble.product()
+                    new_product = workstation.assemble_products()
 
                     if new_product is not None:
                         current_workstation.set_busy(True)
@@ -113,7 +133,7 @@ class Model:
             
             # Append the new snapshot
             snapshots.append(current_snapshot)
-
+            self.policy.set_workstations(current_snapshot.get_workstations())
         elif event.get_event_type() == EventType.Processing_Finished:
             #retrieve relevant event entities
             clock = event.get_time()
@@ -126,18 +146,36 @@ class Model:
             # Unblock inspectors
             buffers = workstation.get_buffer()
             inspectors = current_snapshot.get_inspectors()
+            inspector = None
             for component_type, buf in buffers.items():
                 if len(buf) < 2:
                     if component_type == 1:
                         inspectors[1].set_blocked(False)
+                       
                     elif component_type == 2 or component_type == 3:
                         inspectors[2].set_blocked(False)
-                    
-            # Update snapshots
-            workstation.set_busy(False)
-            current_snapshot.set_clock(clock)
+
+            if inspector is not None:
+                 # Generate new event and append to the fel
+                new_inspection_event = create_inspection_finished(clock + generator.get_service_time(), inspector.inspect_component(), inspector)
+
+                # add the new event to the FEL
+                current_snapshot.get_fel().append(new_inspection_event) 
+
+            # try to assemble new product
+            new_product = workstation.assemble_products()
+
+            if new_product is not None:
+                workstation.set_busy(True)
+                new_processing_event = create_processing_finished(clock + generator.get_processing_time(), new_product, workstation)
+                current_snapshot.get_fel().append(new_processing_event)
+            else:
+                workstation.set_busy(False)
             
+            # Update snapshots
+            current_snapshot.set_clock(clock)
             # Save snapshot
             self.snapshots.append(current_snapshot)
+            self.policy.set_workstations(current_snapshot.get_workstations())
         else:
             raise Exception("Unknown event type")

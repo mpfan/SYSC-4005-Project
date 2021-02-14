@@ -2,6 +2,7 @@
 This file contains the class definition for the system snapshot
 '''
 
+
 class Snapshot:
     def __init__(self, clock, workstations, products, components, inspectors, fel):
         self.clock = clock
@@ -11,6 +12,13 @@ class Snapshot:
         self.inspectors = inspectors
         self.fel = fel
     
+    def add_to_fel(self, event):
+        for i in range(0, len(self.fel)):
+            if event.get_time() <= self.fel[i].get_time():
+                self.fel.insert(i, event)
+                return
+        self.fel.append(event)           
+
     def get_clock(self):
         return self.clock
     
