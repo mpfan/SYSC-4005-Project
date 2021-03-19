@@ -45,7 +45,7 @@ class ShortestQueue(Policy):
     # Override
     def get_workstation(self, component_type: int):
         # Initialize to the first workstation
-        workstation = workstations[0] 
+        workstation = self.workstations[0] 
         for work in self.workstations:
             # Strictly less than
             if len(work.get_buffers[component_type]) < len(workstation.get_buffers[component_type]):

@@ -116,5 +116,5 @@ class Workstation(Entity):
             else:
                 return None
         else:
-            raise Exepction("Unknown workstation")
+            raise Exception("Unknown workstation")
             

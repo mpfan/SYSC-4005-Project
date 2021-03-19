@@ -3,7 +3,7 @@ from entity import *
 from snapshot import Snapshot
 from policy import RoundRobin, ShortestQueue
 from event import create_inspection_finished, create_processing_finished, create_end_of_simulation, EventType
-from generator import get_service_time, get_processing_time
+from generator import Generator
 
 # System modules
 import copy
@@ -13,31 +13,14 @@ This file contains the class definition for the model
 '''
 
 class Model:
-    def __init__(self, policyName):
-        # Initializes the initial system snapshot
-        clock = 0
-        w1 = Workstation(1, {1: []})
-        w2 = Workstation(2, {1: [], 2: []})
-        w3 = Workstation(3, {1: [], 3: []})
-        workstations = [w1, w2, w3]
-        products = []
-        components = []
-        inspectors = [Inspector(n) for n in range (1,3)] # 2 inspectors with id 1,2
-
-        # Initial events
-        eos = create_end_of_simulation(60)
-        inspectionFinished1 = create_inspection_finished(2, Component(1), inspectors[0])
-        inspectionFinished2 = create_inspection_finished(3, Component(2), inspectors[1])
-
-        fel = [inspectionFinished1, inspectionFinished2, eos]
-        
+    def __init__(self, policyName, seed, initial_snapshot):
+        self.snapshots = [initial_snapshot]
+        self.generator = Generator(seed)
 
         if policyName == "RoundRobin":
-            self.policy = RoundRobin(workstations, 0)
+            self.policy = RoundRobin(self.snapshots[0].get_workstations(), 0)
         elif policyName == "ShortestQueue":
-            self.policy = ShortestQueue(workstations)
-        
-        self.snapshots = [Snapshot(clock, workstations, products, components, inspectors, fel)]
+            self.policy = ShortestQueue(self.snapshots[0].get_workstations())
     
     # This is where the simulations happens
     def simulate(self):
@@ -118,7 +101,7 @@ class Model:
 
                     if new_product is not None:
                         current_workstation.set_busy(True)
-                        new_processing_event = create_processing_finished(clock + get_processing_time(), new_product, current_workstation)
+                        new_processing_event = create_processing_finished(clock + self.generator.get_processing_time(current_workstation.get_id()), new_product, current_workstation)
                         current_snapshot.add_to_fel(new_processing_event)
 
                 new_component = inspector.inspect_component()
@@ -126,7 +109,7 @@ class Model:
                 current_snapshot.get_components().append(new_component)
                 
                 # Generate new event and append to the fel
-                new_inspection_event = create_inspection_finished(clock + get_service_time(), new_component, inspector)
+                new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(inspector.get_id()), new_component, inspector)
 
                 # add the new event to the FEL
                 current_snapshot.add_to_fel(new_inspection_event)          
@@ -163,7 +146,7 @@ class Model:
 
             if inspector is not None:
                  # Generate new event and append to the fel
-                new_inspection_event = create_inspection_finished(clock + get_service_time(), inspector.inspect_component(), inspector)
+                new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(inspector.get_id()), inspector.inspect_component(), inspector)
 
                 # add the new event to the FEL
                 current_snapshot.add_to_fel(new_inspection_event) 
@@ -173,7 +156,7 @@ class Model:
 
             if new_product is not None:
                 workstation.set_busy(True)
-                new_processing_event = create_processing_finished(clock + get_processing_time(), new_product, workstation)
+                new_processing_event = create_processing_finished(clock + self.generator.get_processing_time(workstation.get_id()), new_product, workstation)
                 current_snapshot.add_to_fel(new_processing_event)
             else:
                 workstation.set_busy(False)
