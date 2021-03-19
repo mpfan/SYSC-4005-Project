@@ -38,6 +38,31 @@ class Model:
     # So this function will probably return a pandas object or some object that we can use to do analysis and visualization
     def generate_report(self):
         latest_snap = self.snapshots[-1]
+        for i, snapshot in enumerate(self.snapshots):
+            print(f'############################ SNAPSHOT {i} ############################')
+            print(f'Clock: {snapshot.get_clock()}')
+            print()
+            print(f'############################ Inspectors ############################')
+            for inspector in snapshot.get_inspectors():
+                
+                print(f'| Inspector {inspector.get_id()} |')
+                print(f'Is Blocked: {inspector.is_blocked()}')
+                print(f'Busy Time: {inspector.get_busy_time()}')
+                print(f'Blocked Time: {inspector.get_blocked_time()}')
+                print()
+
+            print()
+            print(f'############################ Workstations ############################')
+            for workstation in snapshot.get_workstations():
+                
+                print(f'| Workstation {workstation.get_id()} |')
+
+                for buffer_number, buffer in workstation.get_buffers().items():
+                    component_list = [str(component) for component in buffer]
+                    print(f'Buffer {buffer_number}: {component_list}')
+                    print()
+
+        print("############################### OUTPUTS ###############################")
         print("Created components:", len(latest_snap.get_components()))
         print("Created products", len(latest_snap.get_products()))
         return self.snapshots
