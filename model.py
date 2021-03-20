@@ -27,13 +27,11 @@ class Model:
         while True:
             # get the latest snapshot and state
             event = self.snapshots[-1].get_fel().pop(0)
-
-            if event.get_event_type() == EventType.EOS:
-                print("Simulation has completed")
-                break
             
             self.process_event(event)
-        
+
+            if event.get_event_type() == EventType.EOS:
+                break
     
     # So this function will probably return a pandas object or some object that we can use to do analysis and visualization
     def generate_report(self):
@@ -42,7 +40,7 @@ class Model:
             print(f'############################ SNAPSHOT {i} ############################')
             print(f'Clock: {snapshot.get_clock()}')
             if snapshot.get_event() is not None:
-                print(f'Event: {snapshot.get_event().get_event_type()} {snapshot.get_event().get_entity().get_id()}')
+                print(f'Event: {snapshot.get_event().get_event_type()}')
             print()
             print(f'############################ Inspectors ############################')
             for inspector in snapshot.get_inspectors():
@@ -76,6 +74,11 @@ class Model:
         for p in latest_snap.get_products():
             product_dict[p.get_id()] = product_dict.get(p.get_id(), 0) + 1
         print("Product frequency: ", product_dict)
+
+        print("Total blocked time for Inspector 1: ", snapshot.get_inspectors()[0].get_blocked_time())
+        print("Total busy time for Inspector 1: ", snapshot.get_inspectors()[0].get_busy_time())
+        print("Total blocked time for Inspector 2: ", snapshot.get_inspectors()[1].get_blocked_time())
+        print("Total busy time for Inspector 2: ", snapshot.get_inspectors()[1].get_busy_time())
         return self.snapshots
 
     # Process the event
@@ -217,6 +220,11 @@ class Model:
             # Save snapshot
             self.snapshots.append(current_snapshot)
             self.policy.set_workstations(current_snapshot.get_workstations())
+        elif event.get_event_type() == EventType.EOS:
+            current_snapshot.set_clock(clock)
+            current_snapshot.set_event(event)
+            self.snapshots.append(current_snapshot)
+            print("Simulation has completed")
         else:
             raise Exception("Unknown event type")
     

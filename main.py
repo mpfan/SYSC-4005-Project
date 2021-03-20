@@ -11,18 +11,16 @@ if __name__ == '__main__':
     w3 = Workstation(3, {1: [], 3: []})
     workstations = [w1, w2, w3]
     products = []
-    components = [Component(1), Component(2)]
+    components = [Component(1)]
     # 2 inspectors with id 1,2
     inspectors = [Inspector(n) for n in range(1, 3)]
 
     # Initial events
-    eos = create_end_of_simulation(5000)
+    eos = create_end_of_simulation(1000)
     inspectionFinished1 = create_inspection_finished(
         2, Component(1), inspectors[0])
     inspectionFinished2 = create_inspection_finished(
         3, Component(2), inspectors[1])
-    processingFinished1 = create_processing_finished(5, Product(1), w1);
-    # processingFinished2 = create_processing_finished(7, Product(2), w2);
 
     fel = [inspectionFinished1, inspectionFinished2, eos]
 
