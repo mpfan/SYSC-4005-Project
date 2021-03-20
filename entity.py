@@ -15,6 +15,9 @@ class Entity:
 class Component(Entity):
     def __init__(self, id):
         super().__init__(id)
+    
+    def __str__(self):
+        return str(self.id)
 
 class Product(Entity):
     def __init__(self, id):
@@ -45,13 +48,16 @@ class Inspector(Entity):
     def set_blocked(self, blocked):
         self.blocked = blocked
 
-    def inspect_component(self):
+    def inspect_component(self, component_type=None):
         # Return C1 if id = 1
         if self.id == 1:
             return Component(1)
         # Return C2 or C3 randomly if id = 2
         else:
-            return Component(random.randint(2, 3))
+            if component_type is None:
+                return Component(random.randint(2, 3))
+            else:
+                return Component(component_type)
 
 class Workstation(Entity):
     def __init__(self, id, buffers):
