@@ -51,4 +51,4 @@ class Generator:
     ITT method.
     '''
     def exponential_variate(self, lambd, rn):
-        return -math.log(1 - rn) / lambd
+        return math.floor(-math.log(1 - rn) / lambd)

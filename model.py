@@ -80,10 +80,10 @@ class Model:
 
     # Process the event
     def process_event(self, event):
-        print(f'Event type: {event.get_event_type()}')
         # We are always working with a new copy of the snapshot
         # At first, this new copy is the same as the previous snapshot
         current_snapshot = copy.deepcopy(self.snapshots[-1])
+        self.policy.set_workstations(current_snapshot.workstations)
 
         clock = event.get_time()
 
@@ -108,10 +108,6 @@ class Model:
             # Retrive relevent entities for this event 
             component = event.get_entity()
             inspector = current_snapshot.get_inspectors()[event.get_creator().get_id() - 1]
-            print("Component: ", component.get_id())
-            print("Inspector: ", inspector.get_id())
-            print("Inspector from event: ", event.get_creator().get_id())
-            assert(event.get_creator().get_id() == inspector.get_id())
 
             workstations = current_snapshot.get_workstations()
             clock = event.get_time()
@@ -120,10 +116,7 @@ class Model:
             # Check all buffers
             full = True
             for workstation in workstations:
-                print(f'IFEvent: Workstation ID: {workstation.get_id()}')
-                print(f'Buffers: {workstation.get_buffers()}')
                 for c_type, buff in workstation.get_buffers().items():
-                    print(f'IFEvent: Component Type: {c_type} Buffer size: {len(buff)}')
                     if component.get_id() == c_type and len(buff) < 2:
                         full = False
 
@@ -148,14 +141,8 @@ class Model:
                         current_workstation.set_busy(True)
                         new_processing_event = create_processing_finished(clock + self.generator.get_processing_time(current_workstation.get_id()), new_product, current_workstation)
                         current_snapshot.add_to_fel(new_processing_event)
-                        print(f'Created product: {new_product.get_id()}')
-                        print(f'IFEvent: Buffers: {current_workstation.get_buffers()}')
 
                 new_component = inspector.inspect_component()
-                # add component to snapshot
-                # current_snapshot.get_components().append(new_component)
-                print(f'Inspection Finished: Inspector {inspector.get_id()} created:  {new_component.get_id()}')
-
 
                 # Generate new event and append to the fel
                 new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(inspector.get_id()), new_component, inspector)
@@ -187,13 +174,11 @@ class Model:
             buffers = workstation.get_buffers()
             inspectors = current_snapshot.get_inspectors()
             for component_type, buf in buffers.items():
-                print(f'Component Type: {component_type}  Buffer size: {len(buf)}')
                 if len(buf) < 2:
                     if component_type == 1:
                         inspectors[0].set_blocked(False)
 
                         new_component = inspectors[0].inspect_component()
-                        print("Inspector 1 created:",new_component.get_id())
                         # add component to snapshot
                         # current_snapshot.get_components().append(new_component)
                         # Generate new event and append to the fel
@@ -206,9 +191,8 @@ class Model:
                         inspectors[1].set_blocked(False)
 
                         new_component = inspectors[1].inspect_component(component_type=component_type)
-                        print("Inspector 2 created:", new_component.get_id())
                         # add component to snapshot
-                        # current_snapshot.get_components().append(new_component)
+
                         # Generate new event and append to the fel
                         new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(inspectors[1].get_id()), new_component, inspectors[1])
 
@@ -222,8 +206,6 @@ class Model:
                 workstation.set_busy(True)
                 new_processing_event = create_processing_finished(clock + self.generator.get_processing_time(workstation.get_id()), new_product, workstation)
                 current_snapshot.add_to_fel(new_processing_event)
-                print(f'Created product: {new_product.get_id()}')
-                print(f'PFEvent: Buffers: {workstation.get_buffers()}')
             else:
                 workstation.set_busy(False)
             
@@ -238,4 +220,3 @@ class Model:
         else:
             raise Exception("Unknown event type")
     
-        print()

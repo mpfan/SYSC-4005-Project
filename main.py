@@ -16,7 +16,7 @@ if __name__ == '__main__':
     inspectors = [Inspector(n) for n in range(1, 3)]
 
     # Initial events
-    eos = create_end_of_simulation(100)
+    eos = create_end_of_simulation(5000)
     inspectionFinished1 = create_inspection_finished(
         2, Component(1), inspectors[0])
     inspectionFinished2 = create_inspection_finished(
