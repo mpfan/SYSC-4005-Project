@@ -34,6 +34,8 @@ class RoundRobin(Policy):
             # update the index for the next work station
             self.index = (self.index + 1) % len(self.workstations)
             return workstation
+        
+        self.index = (self.index + 1) % len(self.workstations)
 
         # If the workstation that's next in line is full then we select 
         return self.get_workstation(component_type)
@@ -48,10 +50,10 @@ class ShortestQueue(Policy):
         workstation = self.workstations[0] 
         for work in self.workstations:
             # Strictly less than
-            if len(work.get_buffers[component_type]) < len(workstation.get_buffers[component_type]):
+            if len(work.get_buffers()[component_type]) < len(workstation.get_buffers()[component_type]):
                 workstation = work
             # If equal W1 > W2 > W3
-            elif len(work.get_buffers[component_type]) == len(workstation.get_buffers[component_type]):
+            elif len(work.get_buffers()[component_type]) == len(workstation.get_buffers()[component_type]):
                 workstation = workstation if workstation.get_id() < work.get_id() else work
 
         return workstation
