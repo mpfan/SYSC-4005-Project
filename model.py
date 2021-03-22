@@ -80,6 +80,15 @@ class Model:
         print("Total blocked time for Inspector 2: ", snapshot.get_inspectors()[1].get_blocked_time())
         print("Total busy time for Inspector 2: ", snapshot.get_inspectors()[1].get_busy_time())
         return self.snapshots
+    
+    def get_inspector1_blocked_time(self):
+        return self.snapshots[-1].get_inspectors()[0].get_blocked_time()
+    
+    def get_inspector2_blocked_time(self):
+        return self.snapshots[-1].get_inspectors()[1].get_blocked_time()
+    
+    def get_total_num_of_products(self):
+        return len(self.snapshots[-1].get_products())
 
     # Process the event
     def process_event(self, event):
