@@ -199,14 +199,14 @@ class Model:
 
                                     # add the new event to the FEL
                                     current_snapshot.add_to_fel(new_inspection_event)
+                else:
+                    new_component = inspector.inspect_component()
 
-                new_component = inspector.inspect_component()
+                    # Generate new event and append to the fel
+                    new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspector)
 
-                # Generate new event and append to the fel
-                new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspector)
-
-                # add the new event to the FEL
-                current_snapshot.add_to_fel(new_inspection_event)          
+                    # add the new event to the FEL
+                    current_snapshot.add_to_fel(new_inspection_event)          
             else:
                 # Because inspector will always be working when not blocked. Therefore
                 # idle means blocked and busy means not blocked
@@ -236,37 +236,20 @@ class Model:
                 new_processing_event = create_processing_finished(clock + self.generator.get_processing_time(workstation.get_id()), new_product, workstation)
                 current_snapshot.add_to_fel(new_processing_event)
 
-                # Unblock inspectors
-                buffers = workstation.get_buffers()
-                inspectors = current_snapshot.get_inspectors()
-                for component_type, buf in buffers.items():
-                    if len(buf) < 2:
-                        if component_type == 1:
-                            inspectors[0].set_blocked(False)
-
-                            new_component = inspectors[0].inspect_component()
-                            # add component to snapshot
-                            # current_snapshot.get_components().append(new_component)
-                            # Generate new event and append to the fel
-                            new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspectors[0])
-
-                            # add the new event to the FEL
-                            current_snapshot.add_to_fel(new_inspection_event) 
-                        
-                        elif component_type == 2 or component_type == 3:
-                            inspectors[1].set_blocked(False)
-
-                            new_component = inspectors[1].inspect_component(component_type=component_type)
-                            # add component to snapshot
-
-                            # Generate new event and append to the fel
-                            new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspectors[1])
-
-                            # add the new event to the FEL
-                            current_snapshot.add_to_fel(new_inspection_event)
             else:
                 workstation.set_busy(False)
             
+            # Unblock inspectors
+            buffers = workstation.get_buffers()
+            inspectors = current_snapshot.get_inspectors()
+            for component_type, buf in buffers.items():
+                if len(buf) < 2:
+                    if component_type == 1:
+                        inspectors[0].set_blocked(False)
+
+                    elif component_type == 2 or component_type == 3:
+                        inspectors[1].set_blocked(False)
+
             current_snapshot.get_workstations()[workstation.get_id() - 1] = workstation
 
             # Update snapshots
