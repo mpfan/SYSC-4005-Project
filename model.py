@@ -39,31 +39,31 @@ class Model:
     # So this function will probably return a pandas object or some object that we can use to do analysis and visualization
     def generate_report(self):
         latest_snap = self.snapshots[-1]
-        for i, snapshot in enumerate(self.snapshots):
-            print(f'############################ SNAPSHOT {i} ############################')
-            print(f'Clock: {snapshot.get_clock()}')
-            if snapshot.get_event() is not None:
-                print(f'Event: {snapshot.get_event().get_event_type()}')
-            print()
-            print(f'############################ Inspectors ############################')
-            for inspector in snapshot.get_inspectors():
+        # for i, snapshot in enumerate(self.snapshots):
+        #     print(f'############################ SNAPSHOT {i} ############################')
+        #     print(f'Clock: {snapshot.get_clock()}')
+        #     if snapshot.get_event() is not None:
+        #         print(f'Event: {snapshot.get_event().get_event_type()}')
+        #     print()
+        #     print(f'############################ Inspectors ############################')
+        #     for inspector in snapshot.get_inspectors():
                 
-                print(f'| Inspector {inspector.get_id()} |')
-                print(f'Is Blocked: {inspector.is_blocked()}')
-                print(f'Busy Time: {inspector.get_busy_time()}')
-                print(f'Blocked Time: {inspector.get_blocked_time()}')
-                print()
+        #         print(f'| Inspector {inspector.get_id()} |')
+        #         print(f'Is Blocked: {inspector.is_blocked()}')
+        #         print(f'Busy Time: {inspector.get_busy_time()}')
+        #         print(f'Blocked Time: {inspector.get_blocked_time()}')
+        #         print()
 
-            print()
-            print(f'############################ Workstations ############################')
-            for workstation in snapshot.get_workstations():
+        #     print()
+        #     print(f'############################ Workstations ############################')
+        #     for workstation in snapshot.get_workstations():
                 
-                print(f'| Workstation {workstation.get_id()} |')
+        #         print(f'| Workstation {workstation.get_id()} |')
 
-                for buffer_number, buffer in workstation.get_buffers().items():
-                    component_list = [str(component) for component in buffer]
-                    print(f'Buffer {buffer_number}: {component_list}')
-                    print()
+        #         for buffer_number, buffer in workstation.get_buffers().items():
+        #             component_list = [str(component) for component in buffer]
+        #             print(f'Buffer {buffer_number}: {component_list}')
+        #             print()
 
         print("############################### OUTPUTS ###############################")
         print("Total components created:", len(latest_snap.get_components()))
@@ -78,10 +78,10 @@ class Model:
             product_dict[p.get_id()] = product_dict.get(p.get_id(), 0) + 1
         print("Product frequency: ", product_dict)
 
-        print("Total blocked time for Inspector 1: ", snapshot.get_inspectors()[0].get_blocked_time())
-        print("Total busy time for Inspector 1: ", snapshot.get_inspectors()[0].get_busy_time())
-        print("Total blocked time for Inspector 2: ", snapshot.get_inspectors()[1].get_blocked_time())
-        print("Total busy time for Inspector 2: ", snapshot.get_inspectors()[1].get_busy_time())
+        print("Total blocked time for Inspector 1: ", latest_snap.get_inspectors()[0].get_blocked_time())
+        print("Total busy time for Inspector 1: ", latest_snap.get_inspectors()[0].get_busy_time())
+        print("Total blocked time for Inspector 2: ", latest_snap.get_inspectors()[1].get_blocked_time())
+        print("Total busy time for Inspector 2: ", latest_snap.get_inspectors()[1].get_busy_time())
         return self.snapshots
     
     def get_inspector1_blocked_time(self, t0):
@@ -117,13 +117,16 @@ class Model:
 
         clock = event.get_time()
 
+        # current_snapshot.events.append(event)
+
         # Calculate cumulative stats
          # We are tracking the busy and idle time for inspectors and workstaions
         for inspector in current_snapshot.get_inspectors():
-            if not inspector.is_blocked():
-                inspector.set_busy_time(inspector.get_busy_time() + (clock - current_snapshot.get_clock()))
-            else:
+            if inspector.is_blocked():
                 inspector.set_blocked_time(inspector.get_blocked_time() + (clock - current_snapshot.get_clock()))
+            elif inspector.is_busy():
+                inspector.set_busy_time(inspector.get_busy_time() + (clock - current_snapshot.get_clock()))
+                
 
         for workstation in current_snapshot.get_workstations():
             if workstation.is_busy():
@@ -142,6 +145,8 @@ class Model:
             workstations = current_snapshot.get_workstations()
             clock = event.get_time()
             current_snapshot.get_components().append(component)
+
+            inspector.set_busy(False)
 
             # Check all buffers
             full = True
@@ -171,46 +176,22 @@ class Model:
                         new_processing_event = create_processing_finished(clock + self.generator.get_processing_time(current_workstation.get_id()), new_product, current_workstation)
                         current_snapshot.add_to_fel(new_processing_event)
 
-                         # Unblock inspectors
-                        buffers = current_workstation.get_buffers()
-                        inspectors = current_snapshot.get_inspectors()
-                        for component_type, buf in buffers.items():
-                            if len(buf) < 2:
-                                if component_type == 1:
-                                    inspectors[0].set_blocked(False)
+                      
+                new_component = inspector.inspect_component()
 
-                                    new_component = inspectors[0].inspect_component()
-                                    # add component to snapshot
-                                    # current_snapshot.get_components().append(new_component)
-                                    # Generate new event and append to the fel
-                                    new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspectors[0])
+                # Generate new event and append to the fel
+                new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspector)
 
-                                    # add the new event to the FEL
-                                    current_snapshot.add_to_fel(new_inspection_event) 
-                                
-                                elif component_type == 2 or component_type == 3:
-                                    inspectors[1].set_blocked(False)
+                # add the new event to the FEL
+                current_snapshot.add_to_fel(new_inspection_event)          
 
-                                    new_component = inspectors[1].inspect_component(component_type=component_type)
-                                    # add component to snapshot
-
-                                    # Generate new event and append to the fel
-                                    new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspectors[1])
-
-                                    # add the new event to the FEL
-                                    current_snapshot.add_to_fel(new_inspection_event)
-                else:
-                    new_component = inspector.inspect_component()
-
-                    # Generate new event and append to the fel
-                    new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspector)
-
-                    # add the new event to the FEL
-                    current_snapshot.add_to_fel(new_inspection_event)          
+                inspector.set_busy(True)
             else:
                 # Because inspector will always be working when not blocked. Therefore
                 # idle means blocked and busy means not blocked
-                inspector.set_blocked(True)                     
+                inspector.set_blocked(True) 
+                inspector.set_busy(False)
+
             # Update snapshot
             current_snapshot.set_clock(clock)
             current_snapshot.set_event(event)
@@ -246,11 +227,27 @@ class Model:
                 if len(buf) < 2:
                     if component_type == 1:
                         inspectors[0].set_blocked(False)
+                        if not inspectors[0].is_busy():
+                            new_component = inspectors[0].inspect_component()
+
+                            # Generate new event and append to the fel
+                            new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspector)
+
+                            # add the new event to the FEL
+                            current_snapshot.add_to_fel(new_inspection_event) 
+                            inspectors[0].set_busy(True)   
 
                     elif component_type == 2 or component_type == 3:
                         inspectors[1].set_blocked(False)
+                        if not inspectors[1].is_busy():
+                            new_component = inspectors[1].inspect_component()
 
-            current_snapshot.get_workstations()[workstation.get_id() - 1] = workstation
+                            # Generate new event and append to the fel
+                            new_inspection_event = create_inspection_finished(clock + self.generator.get_inspection_time(new_component.get_id()), new_component, inspector)
+
+                            # add the new event to the FEL
+                            current_snapshot.add_to_fel(new_inspection_event) 
+                            inspectors[1].set_busy(True) 
 
             # Update snapshots
             current_snapshot.set_clock(clock)

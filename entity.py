@@ -29,6 +29,13 @@ class Inspector(Entity):
         self.busy_time = 0
         self.blocked_time = 0
         self.blocked = False
+        self.busy = False
+
+    def is_busy(self):
+        return self.busy
+
+    def set_busy(self, busy):
+        self.busy = busy
 
     def get_busy_time(self):
         return self.busy_time
